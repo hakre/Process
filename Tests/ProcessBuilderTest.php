@@ -20,6 +20,10 @@ class ProcessBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldInheritEnvironmentVars()
     {
+        if (false === strpos(ini_get('variables_order'), 'E')) {
+            $this->markTestSkipped('Environment variables are not populated into $_ENV by php.ini.');
+        }
+
         $snapshot = $_ENV;
         $_ENV = $expected = array('foo' => 'bar');
 
@@ -37,6 +41,10 @@ class ProcessBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldInheritAndOverrideEnvironmentVars()
     {
+        if (false === strpos(ini_get('variables_order'), 'E')) {
+            $this->markTestSkipped('Environment variables are not populated into $_ENV by php.ini.');
+        }
+
         $snapshot = $_ENV;
         $_ENV = array('foo' => 'bar', 'bar' => 'baz');
         $expected = array('foo' => 'foo', 'bar' => 'baz');
@@ -47,6 +55,27 @@ class ProcessBuilderTest extends \PHPUnit_Framework_TestCase
         $proc = $pb->getProcess();
 
         $this->assertEquals($expected, $proc->getEnv(), '->inheritEnvironmentVariables() copies $_ENV');
+
+        $_ENV = $snapshot;
+    }
+
+    /**
+     * @test
+     * @expectedException \Symfony\Component\Process\Exception\LogicException
+     */
+    public function shouldInheritAndOverrideEnvironmentVarsWithException()
+    {
+        if (false !== strpos(ini_get('variables_order'), 'E')) {
+            $this->markTestSkipped('Environment variables are populated into $_ENV by php.ini.');
+        }
+
+        $snapshot = $_ENV;
+        $_ENV = $expected = array('foo' => 'bar');
+
+        $pb = new ProcessBuilder();
+        $pb->add('foo')->inheritEnvironmentVariables()
+            ->setEnv('foo', 'foo');
+        $pb->getProcess();
 
         $_ENV = $snapshot;
     }
@@ -67,6 +96,10 @@ class ProcessBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldNotReplaceExplicitlySetVars()
     {
+        if (false === strpos(ini_get('variables_order'), 'E')) {
+            $this->markTestSkipped('Environment variables are not populated into $_ENV by php.ini.');
+        }
+
         $snapshot = $_ENV;
         $_ENV = array('foo' => 'bar');
         $expected = array('foo' => 'baz');

@@ -135,6 +135,11 @@ class ProcessBuilder
         return $this;
     }
 
+    /**
+     * @return Process
+     *
+     * @throws LogicException
+     */
     public function getProcess()
     {
         if (!count($this->arguments)) {
@@ -146,7 +151,13 @@ class ProcessBuilder
         $script = implode(' ', array_map('escapeshellarg', $this->arguments));
 
         if ($this->inheritEnv) {
-            $env = $this->env ? $this->env + $_ENV : null;
+            if ($this->env && FALSE === strpos(ini_get('variables_order'), 'E')) {
+                    throw new LogicException(
+                        'Inheriting environment variables is not supported because additional environment variables are set. '.
+                        'Inheriting is exclusive unless php.ini variables_order populates environment variables into $_ENV (contains \'E\').'
+                    );
+            }
+            $env = $this->env ? $this->env + $_ENV : NULL;
         } else {
             $env = $this->env;
         }
